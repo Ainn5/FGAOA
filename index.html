@@ -23,90 +23,47 @@ footer{text-align:center;color:var(--muted);font-size:12px;padding:0 16px 28px}
 <body>
 <header><div class="brand">RESIDENT SERVICES DIRECTORY</div><div class="logo">FERNHILL GARDEN</div><p class="subtitle">Helpful contacts for our apartment community</p></header>
 <main>
-<section class="panel" id="loginPanel">
-<h1>Resident Login</h1><p class="muted">Sign in with your registered mobile number to view apartment service contacts.</p>
-<label for="phone">Mobile number</label><input id="phone" type="tel" inputmode="tel" autocomplete="tel" placeholder="+91 98765 43210" maxlength="16">
-<div id="recaptcha-container"></div>
-<button class="full" id="sendOtp">Send OTP</button>
-<div id="otpArea" class="hidden"><label for="otp">Enter OTP</label><input id="otp" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="6-digit OTP"><button class="full" id="verifyOtp">Verify &amp; Login</button></div>
-<div class="status" id="loginStatus" role="status"></div>
-<div class="notice">Access is restricted to mobile numbers registered by the apartment administrator. OTP login becomes active after Firebase is configured (see SETUP.md).</div>
-</section>
-<section class="panel hidden" id="directoryPanel">
-<div class="toolbar"><div><h1>Service Contacts</h1><div class="userline" id="signedInAs"></div></div><button class="secondary" id="logout">Log out</button></div>
+<section class="panel">
+<h1>Service Contacts</h1><p class="muted">Choose a service category to view the available contact details.</p>
 <label for="category">Select service category</label>
 <select id="category"><option value="">Choose a category</option>
 <option>Electrician</option><option>Plumber</option><option>Gardener</option><option>Security</option><option>Dhobi / Laundry</option><option>Library</option><option>Carpenter</option><option>Housekeeping</option><option>AC Technician</option><option>Lift Maintenance</option><option>Garbage Collection</option><option>Car Washing</option></select>
 <div id="results" aria-live="polite"><div class="empty">Choose a category to view its contact details.</div></div>
 </section>
 </main>
-<footer>Fernhill Garden Resident Services · Contact details are for residents only</footer>
+<footer>Fernhill Garden Resident Services</footer>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
 <script>
 /* Add your Firebase web-app configuration here. See SETUP.md. */
 const firebaseConfig = {
   apiKey: "PASTE_FIREBASE_API_KEY",
-  authDomain: "PASTE_PROJECT_ID.firebaseapp.com",
   projectId: "PASTE_PROJECT_ID",
   appId: "PASTE_FIREBASE_APP_ID"
 };
 const configured = firebaseConfig.apiKey !== "PASTE_FIREBASE_API_KEY" && firebaseConfig.projectId !== "PASTE_PROJECT_ID" && firebaseConfig.appId !== "PASTE_FIREBASE_APP_ID";
-const $ = id => document.getElementById(id);
-let confirmation=null, recaptcha=null, auth=null, db=null;
-function setStatus(message){$("loginStatus").textContent=message}
-function showLogin(){ $("loginPanel").classList.remove("hidden"); $("directoryPanel").classList.add("hidden");}
-function showDirectory(user){ $("loginPanel").classList.add("hidden"); $("directoryPanel").classList.remove("hidden"); $("signedInAs").textContent="Signed in: "+(user.phoneNumber||"verified resident");}
-if(!configured){$("sendOtp").disabled=true;setStatus("OTP login is not configured yet. The administrator must complete the Firebase setup.");}
-else {
- firebase.initializeApp(firebaseConfig); auth=firebase.auth(); db=firebase.firestore();
- auth.onAuthStateChanged(async user=>{
-  if(!user){showLogin();return;}
-  try{
-   const resident=await db.collection("residents").doc(user.uid).get();
-   if(!resident.exists || resident.data().active!==true || resident.data().phoneNumber!==user.phoneNumber){
-    await auth.signOut();showLogin();setStatus("This mobile number is not registered as an active resident. Please contact the administrator.");return;
-   }
-   showDirectory(user);
-  }catch(e){await auth.signOut();showLogin();setStatus("Could not verify resident access. Please try again.");}
- });
- $("sendOtp").addEventListener("click",async()=>{
-  const phone=$("phone").value.trim();
-  if(!/^\+[1-9]\d{7,14}$/.test(phone)){setStatus("Enter the mobile number with country code, e.g. +919876543210.");return;}
-  try{
-   $("sendOtp").disabled=true;
-   if(!recaptcha)recaptcha=new firebase.auth.RecaptchaVerifier("recaptcha-container",{size:"normal"});
-   await recaptcha.render();
-   confirmation=await auth.signInWithPhoneNumber(phone,recaptcha);
-   $("otpArea").classList.remove("hidden");setStatus("OTP sent. Check your phone."); 
-  }catch(e){setStatus(e.message||"Unable to send OTP.");if(recaptcha){recaptcha.clear();recaptcha=null;}}
-  finally{$("sendOtp").disabled=false;}
- });
- $("verifyOtp").addEventListener("click",async()=>{
-  if(!confirmation){setStatus("Please request an OTP first.");return;}
-  try{await confirmation.confirm($("otp").value.trim());setStatus("Verifying resident access…");}
-  catch(e){setStatus("OTP verification failed. Check the code and try again.");}
- });
- $("logout").addEventListener("click",()=>auth.signOut());
- $("category").addEventListener("change",async()=>{
-  const category=$("category").value, results=$("results");
-  if(!category){results.innerHTML='<div class="empty">Choose a category to view its contact details.</div>';return;}
-  results.innerHTML='<div class="empty">Loading contacts…</div>';
-  try{
-   const snap=await db.collection("contacts").where("category","==",category).where("active","==",true).get();
-   if(snap.empty){results.innerHTML='<div class="empty">No contact has been added for this category yet. Please contact the apartment administrator.</div>';return;}
-   results.innerHTML="";
-   snap.forEach(doc=>{
-    const c=doc.data(), card=document.createElement("div");card.className="contact";
-    const info=document.createElement("div"), name=document.createElement("strong"), detail=document.createElement("small");
-    name.textContent=c.name||"Service contact";detail.textContent=[c.phone,c.availability].filter(Boolean).join(" · ");
-    info.append(name,detail);card.append(info);
-    if(c.phone){const call=document.createElement("a");call.className="call";call.href="tel:"+c.phone.replace(/[^+\d]/g,"");call.textContent="Call";card.append(call);}
-    results.append(card);
-   });
-  }catch(e){results.innerHTML='<div class="empty">Unable to load contacts. Please try again later.</div>';}
- });
-}
+const category = document.getElementById("category"), results = document.getElementById("results");
+let db = null;
+if (configured) { firebase.initializeApp(firebaseConfig); db = firebase.firestore(); }
+category.addEventListener("change", async () => {
+  const selected = category.value;
+  if (!selected) { results.innerHTML = '<div class="empty">Choose a category to view its contact details.</div>'; return; }
+  if (!db) { results.innerHTML = '<div class="empty">Contact details are not available until the administrator connects the directory database.</div>'; return; }
+  results.innerHTML = '<div class="empty">Loading contacts…</div>';
+  try {
+    const snap = await db.collection("contacts").where("category", "==", selected).where("active", "==", true).get();
+    if (snap.empty) { results.innerHTML = '<div class="empty">No contact has been added for this category yet. Please contact the apartment administrator.</div>'; return; }
+    results.innerHTML = "";
+    snap.forEach(doc => {
+      const c = doc.data(), card = document.createElement("div"); card.className = "contact";
+      const info = document.createElement("div"), name = document.createElement("strong"), detail = document.createElement("small");
+      name.textContent = c.name || "Service contact";
+      detail.textContent = [c.phone, c.availability].filter(Boolean).join(" · ");
+      info.append(name, detail); card.append(info);
+      if (c.phone) { const call = document.createElement("a"); call.className = "call"; call.href = "tel:" + c.phone.replace(/[^+\d]/g, ""); call.textContent = "Call"; card.append(call); }
+      results.append(card);
+    });
+  } catch (e) { results.innerHTML = '<div class="empty">Unable to load contacts. Please try again later.</div>'; }
+});
 </script>
 </body></html>
