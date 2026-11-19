@@ -5,19 +5,19 @@
 <meta name="theme-color" content="#174c3c"><title>Fernhill Garden | Resident Services</title>
 <style>
 :root{--green:#174c3c;--green2:#236b51;--bg:#f3f7f4;--ink:#1c2923;--muted:#64736b;--line:#dce7df}
-*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
+*{box-sizing:border-box}html{-webkit-text-size-adjust:100%;text-size-adjust:100%}body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;overflow-wrap:break-word}img,input,select,button{max-width:100%}
 header{background:linear-gradient(125deg,#123c30,#287456);color:white;padding:28px 18px 34px;text-align:center}
 .brand{font-size:12px;letter-spacing:.18em;font-weight:700;opacity:.85}.logo{font-size:34px;margin:8px 0 0}.subtitle{margin:3px 0 0;color:#e0eee6}
 main{max-width:760px;margin:-16px auto 40px;padding:0 16px}.panel{background:white;border:1px solid var(--line);border-radius:18px;padding:22px;box-shadow:0 8px 28px #173e2c0b}
 h1,h2{margin:0 0 8px}h1{font-size:23px}h2{font-size:19px}.muted{color:var(--muted);font-size:14px;margin:0 0 18px}
-label{display:block;font-weight:650;font-size:14px;margin:14px 0 6px}input,select{width:100%;padding:13px 14px;border:1px solid #cbd9cf;border-radius:10px;font:inherit;background:white;color:var(--ink)}input:focus,select:focus{outline:3px solid #d5eadc;border-color:var(--green2)}
-button{border:0;border-radius:10px;background:var(--green);color:white;padding:13px 17px;font:inherit;font-weight:700;cursor:pointer}button:hover{background:var(--green2)}button:disabled{opacity:.5;cursor:not-allowed}.full{width:100%;margin-top:14px}.secondary{background:#e9f2ec;color:var(--green)}.hidden{display:none!important}
+label{display:block;font-weight:650;font-size:14px;margin:14px 0 6px}input,select{width:100%;min-height:48px;padding:13px 14px;border:1px solid #cbd9cf;border-radius:10px;font:inherit;background:white;color:var(--ink)}input:focus,select:focus{outline:3px solid #d5eadc;border-color:var(--green2)}
+button{min-height:44px;border:0;border-radius:10px;background:var(--green);color:white;padding:13px 17px;font:inherit;font-weight:700;cursor:pointer}button:hover{background:var(--green2)}button:disabled{opacity:.5;cursor:not-allowed}.full{width:100%;margin-top:14px}.secondary{background:#e9f2ec;color:var(--green)}.hidden{display:none!important}
 .notice{padding:12px 14px;background:#fff7e6;border:1px solid #f0dfb7;border-radius:10px;color:#71551c;font-size:13px;margin-top:14px}
-.status{font-size:14px;margin-top:12px;min-height:22px;color:var(--muted)}.toolbar{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:18px}.userline{font-size:13px;color:var(--muted);overflow-wrap:anywhere}
-.contact{border:1px solid var(--line);border-radius:12px;padding:15px;margin-top:12px;display:flex;align-items:center;justify-content:space-between;gap:12px}.contact strong{display:block}.contact small{color:var(--muted)}
+.status{font-size:14px;margin-top:12px;min-height:22px;color:var(--muted)}.toolbar{display:-webkit-box;display:-ms-flexbox;display:flex;-webkit-box-pack:justify;-ms-flex-pack:justify;justify-content:space-between;-webkit-box-align:center;-ms-flex-align:center;align-items:center;flex-wrap:wrap;margin-bottom:18px}.toolbar>*{margin:4px}.userline{font-size:13px;color:var(--muted);overflow-wrap:anywhere}
+.contact{border:1px solid var(--line);border-radius:12px;padding:15px;margin-top:12px;display:-webkit-box;display:-ms-flexbox;display:flex;-webkit-box-align:center;-ms-flex-align:center;align-items:center;-webkit-box-pack:justify;-ms-flex-pack:justify;justify-content:space-between;flex-wrap:wrap}.contact>div{min-width:0;overflow-wrap:anywhere}.contact strong{display:block}.contact small{color:var(--muted)}
 .empty{text-align:center;padding:26px 12px;color:var(--muted);background:#f7faf8;border-radius:12px;margin-top:14px}
 footer{text-align:center;color:var(--muted);font-size:12px;padding:0 16px 28px}
-@media(max-width:480px){.panel{padding:18px}.contact{align-items:flex-start}}
+@media(max-width:600px){header{padding:24px 14px 30px}.logo{font-size:clamp(25px,7vw,34px)}main{padding:0 12px}.panel{padding:18px}.contact{-webkit-box-align:start;-ms-flex-align:start;align-items:flex-start}.contact>*{max-width:100%}}@media(max-width:360px){.panel{padding:14px}h1{font-size:21px}.contact{padding:12px}}
 </style>
 </head>
 <body>
@@ -34,9 +34,9 @@ footer{text-align:center;color:var(--muted);font-size:12px;padding:0 16px 28px}
 <footer>Fernhill Garden Resident Services</footer>
 <script>
 function showContacts() {
-  const selected = document.getElementById("category").value.trim().toLowerCase();
-  const results = document.getElementById("results");
-  const contacts = {
+  var selected = document.getElementById("category").value.replace(/^\\s+|\\s+$/g, "").toLowerCase();
+  var results = document.getElementById("results");
+  var contacts = {
     "category-manager": [
       { name: "Manoj", phone: "99025 28024" }
     ],
@@ -63,34 +63,36 @@ function showContacts() {
       { name: "Snello Car Clean (Outside Fernhill)", phone: "9620763556", note: "WhatsApp chat only" }
     ]
   };
-  results.replaceChildren();
+  while (results.firstChild) { results.removeChild(results.firstChild); }
   if (!selected) {
     results.innerHTML = '<div class="empty">Choose a category to view its contact details.</div>';
     return;
   }
-  const list = contacts[selected] || [];
+  var list = contacts[selected] || [];
   if (!list.length) {
     results.innerHTML = '<div class="empty">No contact has been added for this category yet.</div>';
     return;
   }
-  list.forEach(contact => {
-    const card = document.createElement("div");
+  for (var i = 0; i < list.length; i++) {
+    var contact = list[i];
+    var card = document.createElement("div");
     card.className = "contact";
-    const info = document.createElement("div");
-    const name = document.createElement("strong");
-    const phone = document.createElement("small");
+    var info = document.createElement("div");
+    var name = document.createElement("strong");
+    var phone = document.createElement("small");
     name.textContent = contact.name;
     phone.textContent = contact.phone || "Phone number not provided";
-    info.append(name, phone);
+    info.appendChild(name);
+    info.appendChild(phone);
     if (contact.note) {
-      const note = document.createElement("small");
+      var note = document.createElement("small");
       note.textContent = contact.note;
       note.style.display = "block";
-      info.append(note);
+      info.appendChild(note);
     }
-    card.append(info);
-    results.append(card);
-  });
+    card.appendChild(info);
+    results.appendChild(card);
+  }
 }
 </script>
 </body></html>
