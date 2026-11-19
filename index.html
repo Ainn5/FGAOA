@@ -69,7 +69,7 @@ category.addEventListener("change", async () => {
   results.innerHTML = '<div class="empty">Loading contacts…</div>';
   try {
     const snap = await db.collection("contacts").where("category", "==", selected).where("active", "==", true).get();
-    if (snap.empty) { results.innerHTML = '<div class="empty">No contact has been added for this category yet. Please contact the apartment administrator.</div>'; return; }
+    if (snap.empty && !localContacts.length) { results.innerHTML = '<div class="empty">No contact has been added for this category yet. Please contact the apartment administrator.</div>'; return; }
     results.innerHTML = "";
     localContacts.forEach(addContactCard);
     snap.forEach(doc => {
@@ -81,7 +81,10 @@ category.addEventListener("change", async () => {
       if (c.phone) { const call = document.createElement("a"); call.className = "call"; call.href = "tel:" + c.phone.replace(/[^+\d]/g, ""); call.textContent = "Call"; card.append(call); }
       results.append(card);
     });
-  } catch (e) { results.innerHTML = '<div class="empty">Unable to load contacts. Please try again later.</div>'; }
+  } catch (e) {
+    if (localContacts.length) { results.innerHTML = ""; localContacts.forEach(addContactCard); }
+    else results.innerHTML = '<div class="empty">Unable to load contacts. Please try again later.</div>';
+  }
 });
 </script>
 </body></html>
