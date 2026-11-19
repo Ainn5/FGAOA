@@ -27,7 +27,7 @@ footer{text-align:center;color:var(--muted);font-size:12px;padding:0 16px 28px}
 <h1>Service Contacts</h1><p class="muted">Choose a service to view the available contact details.</p>
 <label for="category">Select service</label>
 <select id="category" onchange="showContacts()"><option value="">Choose a service</option>
-<option value="category-manager">Manager</option><option>Electrician</option><option>Plumber</option><option>Gardener</option><option>Security</option><option>Dhobi / Laundry</option><option>Library</option><option>Carpenter</option><option>Housekeeping</option><option>AC Technician</option><option>Lift Maintenance</option><option>Garbage Collection</option><option>Car Washing</option></select>
+<option value="category-manager">Manager</option><option>Electrician</option><option>Plumber</option><option>Gardener</option><option>Security</option><option>Dhobi / Laundry</option><option>Library</option><option>NewsPaper</option><option>Carpenter</option><option>Housekeeping</option><option>AC Technician</option><option>Lift Maintenance</option><option>Garbage Collection</option><option>Car Washing</option></select>
 <div id="results" aria-live="polite"><div class="empty">Choose a category to view its contact details.</div></div>
 </section>
 </main>
@@ -53,6 +53,9 @@ function showContacts() {
     ],
     library: [
       { name: "Puttaraju", phone: "9538052318" }
+    ],
+    newspaper: [
+      { name: "LakshmiNarayana", phone: "8105297102" }
     ],
     "car washing": [
       { name: "Raju", phone: "9686273845" },
