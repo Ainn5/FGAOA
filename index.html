@@ -27,7 +27,7 @@ footer{text-align:center;color:var(--muted);font-size:12px;padding:0 16px 28px}
 <h1>Service Contacts</h1><p class="muted">Choose a service category to view the available contact details.</p>
 <label for="category">Select service category</label>
 <select id="category" onchange="showContacts()"><option value="">Choose a category</option>
-<option>Electrician</option><option>Plumber</option><option>Gardener</option><option>Security</option><option>Dhobi / Laundry</option><option>Library</option><option>Carpenter</option><option>Housekeeping</option><option>AC Technician</option><option>Lift Maintenance</option><option>Garbage Collection</option><option>Car Washing</option></select>
+<option value="category-manager">Category Manager</option><option>Electrician</option><option>Plumber</option><option>Gardener</option><option>Security</option><option>Dhobi / Laundry</option><option>Library</option><option>Carpenter</option><option>Housekeeping</option><option>AC Technician</option><option>Lift Maintenance</option><option>Garbage Collection</option><option>Car Washing</option></select>
 <div id="results" aria-live="polite"><div class="empty">Choose a category to view its contact details.</div></div>
 </section>
 </main>
@@ -37,6 +37,9 @@ function showContacts() {
   const selected = document.getElementById("category").value.trim().toLowerCase();
   const results = document.getElementById("results");
   const contacts = {
+    "category-manager": [
+      { name: "Manoj", phone: "99025 28024" }
+    ],
     electrician: [
       { name: "Prasanna", phone: "9902254638" },
       { name: "Naveen", phone: "" }
