@@ -51,6 +51,8 @@ category.addEventListener("change", async () => {
   const localContacts = selected === "Electrician" ? [
     { name: "Prasanna", phone: "9902254638" },
     { name: "Naveen", phone: "" }
+  ] : selected === "Plumber" ? [
+    { name: "Das", phone: "7760077054" }
   ] : [];
   const addContactCard = c => {
     const card = document.createElement("div"); card.className = "contact";
