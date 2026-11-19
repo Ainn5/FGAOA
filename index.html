@@ -46,12 +46,13 @@ const category = document.getElementById("category"), results = document.getElem
 let db = null;
 if (configured) { firebase.initializeApp(firebaseConfig); db = firebase.firestore(); }
 category.addEventListener("change", async () => {
-  const selected = category.value;
+  const selected = category.value.trim();
   if (!selected) { results.innerHTML = '<div class="empty">Choose a category to view its contact details.</div>'; return; }
-  const localContacts = selected === "Electrician" ? [
+  const normalizedCategory = selected.toLowerCase();
+  const localContacts = normalizedCategory === "electrician" ? [
     { name: "Prasanna", phone: "9902254638" },
     { name: "Naveen", phone: "" }
-  ] : selected === "Plumber" ? [
+  ] : normalizedCategory === "plumber" ? [
     { name: "Das", phone: "7760077054" }
   ] : [];
   const addContactCard = c => {
@@ -63,17 +64,16 @@ category.addEventListener("change", async () => {
     
     results.append(card);
   };
+  results.innerHTML = "";
+  localContacts.forEach(addContactCard);
   if (!db) {
-    if (localContacts.length) { results.innerHTML = ""; localContacts.forEach(addContactCard); }
-    else results.innerHTML = '<div class="empty">Contact details are not available until the administrator connects the directory database.</div>';
+    if (!localContacts.length) results.innerHTML = '<div class="empty">Contact details are not available until the administrator connects the directory database.</div>';
     return;
   }
-  results.innerHTML = '<div class="empty">Loading contacts…</div>';
+  if (!localContacts.length) results.innerHTML = '<div class="empty">Loading contacts…</div>';
   try {
     const snap = await db.collection("contacts").where("category", "==", selected).where("active", "==", true).get();
     if (snap.empty && !localContacts.length) { results.innerHTML = '<div class="empty">No contact has been added for this category yet. Please contact the apartment administrator.</div>'; return; }
-    results.innerHTML = "";
-    localContacts.forEach(addContactCard);
     snap.forEach(doc => {
       const c = doc.data(), card = document.createElement("div"); card.className = "contact";
       const info = document.createElement("div"), name = document.createElement("strong"), detail = document.createElement("small");
