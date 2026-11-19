@@ -14,10 +14,10 @@ label{display:block;font-weight:650;font-size:14px;margin:14px 0 6px}input,selec
 button{border:0;border-radius:10px;background:var(--green);color:white;padding:13px 17px;font:inherit;font-weight:700;cursor:pointer}button:hover{background:var(--green2)}button:disabled{opacity:.5;cursor:not-allowed}.full{width:100%;margin-top:14px}.secondary{background:#e9f2ec;color:var(--green)}.hidden{display:none!important}
 .notice{padding:12px 14px;background:#fff7e6;border:1px solid #f0dfb7;border-radius:10px;color:#71551c;font-size:13px;margin-top:14px}
 .status{font-size:14px;margin-top:12px;min-height:22px;color:var(--muted)}.toolbar{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:18px}.userline{font-size:13px;color:var(--muted);overflow-wrap:anywhere}
-.contact{border:1px solid var(--line);border-radius:12px;padding:15px;margin-top:12px;display:flex;align-items:center;justify-content:space-between;gap:12px}.contact strong{display:block}.contact small{color:var(--muted)}.call{white-space:nowrap;text-decoration:none;background:#e8f3eb;color:var(--green);font-weight:750;padding:9px 13px;border-radius:9px}
+.contact{border:1px solid var(--line);border-radius:12px;padding:15px;margin-top:12px;display:flex;align-items:center;justify-content:space-between;gap:12px}.contact strong{display:block}.contact small{color:var(--muted)}
 .empty{text-align:center;padding:26px 12px;color:var(--muted);background:#f7faf8;border-radius:12px;margin-top:14px}
 footer{text-align:center;color:var(--muted);font-size:12px;padding:0 16px 28px}
-@media(max-width:480px){.panel{padding:18px}.contact{align-items:flex-start}.call{padding:8px 10px}}
+@media(max-width:480px){.panel{padding:18px}.contact{align-items:flex-start}}
 </style>
 </head>
 <body>
@@ -58,7 +58,7 @@ category.addEventListener("change", async () => {
     name.textContent = c.name || "Service contact";
     detail.textContent = c.phone || "Phone number not provided";
     info.append(name, detail); card.append(info);
-    if (c.phone) { const call = document.createElement("a"); call.className = "call"; call.href = "tel:" + c.phone.replace(/[^+\d]/g, ""); call.textContent = "Call"; card.append(call); }
+    
     results.append(card);
   };
   if (!db) {
@@ -78,7 +78,7 @@ category.addEventListener("change", async () => {
       name.textContent = c.name || "Service contact";
       detail.textContent = [c.phone, c.availability].filter(Boolean).join(" · ");
       info.append(name, detail); card.append(info);
-      if (c.phone) { const call = document.createElement("a"); call.className = "call"; call.href = "tel:" + c.phone.replace(/[^+\d]/g, ""); call.textContent = "Call"; card.append(call); }
+      
       results.append(card);
     });
   } catch (e) {
