@@ -26,67 +26,47 @@ footer{text-align:center;color:var(--muted);font-size:12px;padding:0 16px 28px}
 <section class="panel">
 <h1>Service Contacts</h1><p class="muted">Choose a service category to view the available contact details.</p>
 <label for="category">Select service category</label>
-<select id="category"><option value="">Choose a category</option>
+<select id="category" onchange="showContacts()"><option value="">Choose a category</option>
 <option>Electrician</option><option>Plumber</option><option>Gardener</option><option>Security</option><option>Dhobi / Laundry</option><option>Library</option><option>Carpenter</option><option>Housekeeping</option><option>AC Technician</option><option>Lift Maintenance</option><option>Garbage Collection</option><option>Car Washing</option></select>
 <div id="results" aria-live="polite"><div class="empty">Choose a category to view its contact details.</div></div>
 </section>
 </main>
 <footer>Fernhill Garden Resident Services</footer>
-<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
 <script>
-/* Add your Firebase web-app configuration here. See SETUP.md. */
-const firebaseConfig = {
-  apiKey: "PASTE_FIREBASE_API_KEY",
-  projectId: "PASTE_PROJECT_ID",
-  appId: "PASTE_FIREBASE_APP_ID"
-};
-const configured = firebaseConfig.apiKey !== "PASTE_FIREBASE_API_KEY" && firebaseConfig.projectId !== "PASTE_PROJECT_ID" && firebaseConfig.appId !== "PASTE_FIREBASE_APP_ID";
-const category = document.getElementById("category"), results = document.getElementById("results");
-let db = null;
-if (configured) { firebase.initializeApp(firebaseConfig); db = firebase.firestore(); }
-category.addEventListener("change", async () => {
-  const selected = category.value.trim();
-  if (!selected) { results.innerHTML = '<div class="empty">Choose a category to view its contact details.</div>'; return; }
-  const normalizedCategory = selected.toLowerCase();
-  const localContacts = normalizedCategory === "electrician" ? [
-    { name: "Prasanna", phone: "9902254638" },
-    { name: "Naveen", phone: "" }
-  ] : normalizedCategory === "plumber" ? [
-    { name: "Das", phone: "7760077054" }
-  ] : [];
-  const addContactCard = c => {
-    const card = document.createElement("div"); card.className = "contact";
-    const info = document.createElement("div"), name = document.createElement("strong"), detail = document.createElement("small");
-    name.textContent = c.name || "Service contact";
-    detail.textContent = c.phone || "Phone number not provided";
-    info.append(name, detail); card.append(info);
-    
-    results.append(card);
+function showContacts() {
+  const selected = document.getElementById("category").value.trim().toLowerCase();
+  const results = document.getElementById("results");
+  const contacts = {
+    electrician: [
+      { name: "Prasanna", phone: "9902254638" },
+      { name: "Naveen", phone: "" }
+    ],
+    plumber: [
+      { name: "Das", phone: "7760077054" }
+    ]
   };
-  results.innerHTML = "";
-  localContacts.forEach(addContactCard);
-  if (!db) {
-    if (!localContacts.length) results.innerHTML = '<div class="empty">Contact details are not available until the administrator connects the directory database.</div>';
+  results.replaceChildren();
+  if (!selected) {
+    results.innerHTML = '<div class="empty">Choose a category to view its contact details.</div>';
     return;
   }
-  if (!localContacts.length) results.innerHTML = '<div class="empty">Loading contacts…</div>';
-  try {
-    const snap = await db.collection("contacts").where("category", "==", selected).where("active", "==", true).get();
-    if (snap.empty && !localContacts.length) { results.innerHTML = '<div class="empty">No contact has been added for this category yet. Please contact the apartment administrator.</div>'; return; }
-    snap.forEach(doc => {
-      const c = doc.data(), card = document.createElement("div"); card.className = "contact";
-      const info = document.createElement("div"), name = document.createElement("strong"), detail = document.createElement("small");
-      name.textContent = c.name || "Service contact";
-      detail.textContent = [c.phone, c.availability].filter(Boolean).join(" · ");
-      info.append(name, detail); card.append(info);
-      
-      results.append(card);
-    });
-  } catch (e) {
-    if (localContacts.length) { results.innerHTML = ""; localContacts.forEach(addContactCard); }
-    else results.innerHTML = '<div class="empty">Unable to load contacts. Please try again later.</div>';
+  const list = contacts[selected] || [];
+  if (!list.length) {
+    results.innerHTML = '<div class="empty">No contact has been added for this category yet.</div>';
+    return;
   }
-});
+  list.forEach(contact => {
+    const card = document.createElement("div");
+    card.className = "contact";
+    const info = document.createElement("div");
+    const name = document.createElement("strong");
+    const phone = document.createElement("small");
+    name.textContent = contact.name;
+    phone.textContent = contact.phone || "Phone number not provided";
+    info.append(name, phone);
+    card.append(info);
+    results.append(card);
+  });
+}
 </script>
 </body></html>
