@@ -48,12 +48,30 @@ if (configured) { firebase.initializeApp(firebaseConfig); db = firebase.firestor
 category.addEventListener("change", async () => {
   const selected = category.value;
   if (!selected) { results.innerHTML = '<div class="empty">Choose a category to view its contact details.</div>'; return; }
-  if (!db) { results.innerHTML = '<div class="empty">Contact details are not available until the administrator connects the directory database.</div>'; return; }
+  const localContacts = selected === "Electrician" ? [
+    { name: "Prasanna", phone: "9902254638" },
+    { name: "Naveen", phone: "" }
+  ] : [];
+  const addContactCard = c => {
+    const card = document.createElement("div"); card.className = "contact";
+    const info = document.createElement("div"), name = document.createElement("strong"), detail = document.createElement("small");
+    name.textContent = c.name || "Service contact";
+    detail.textContent = c.phone || "Phone number not provided";
+    info.append(name, detail); card.append(info);
+    if (c.phone) { const call = document.createElement("a"); call.className = "call"; call.href = "tel:" + c.phone.replace(/[^+\d]/g, ""); call.textContent = "Call"; card.append(call); }
+    results.append(card);
+  };
+  if (!db) {
+    if (localContacts.length) { results.innerHTML = ""; localContacts.forEach(addContactCard); }
+    else results.innerHTML = '<div class="empty">Contact details are not available until the administrator connects the directory database.</div>';
+    return;
+  }
   results.innerHTML = '<div class="empty">Loading contacts…</div>';
   try {
     const snap = await db.collection("contacts").where("category", "==", selected).where("active", "==", true).get();
     if (snap.empty) { results.innerHTML = '<div class="empty">No contact has been added for this category yet. Please contact the apartment administrator.</div>'; return; }
     results.innerHTML = "";
+    localContacts.forEach(addContactCard);
     snap.forEach(doc => {
       const c = doc.data(), card = document.createElement("div"); card.className = "contact";
       const info = document.createElement("div"), name = document.createElement("strong"), detail = document.createElement("small");
