@@ -53,6 +53,11 @@ function showContacts() {
     ],
     library: [
       { name: "Puttaraju", phone: "9538052318" }
+    ],
+    "car washing": [
+      { name: "Raju", phone: "9686273845" },
+      { name: "Munna", phone: "8904418790" },
+      { name: "Snello Car Clean", phone: "9620763556", note: "WhatsApp chat only" }
     ]
   };
   results.replaceChildren();
@@ -74,6 +79,12 @@ function showContacts() {
     name.textContent = contact.name;
     phone.textContent = contact.phone || "Phone number not provided";
     info.append(name, phone);
+    if (contact.note) {
+      const note = document.createElement("small");
+      note.textContent = contact.note;
+      note.style.display = "block";
+      info.append(note);
+    }
     card.append(info);
     results.append(card);
   });
