@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#174c3c"><title>Fernhill Garden | Resident Services</title>
+<style>
+:root{--green:#174c3c;--green2:#236b51;--bg:#f3f7f4;--ink:#1c2923;--muted:#64736b;--line:#dce7df}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
+header{background:linear-gradient(125deg,#123c30,#287456);color:white;padding:28px 18px 34px;text-align:center}
+.brand{font-size:12px;letter-spacing:.18em;font-weight:700;opacity:.85}.logo{font-size:34px;margin:8px 0 0}.subtitle{margin:3px 0 0;color:#e0eee6}
+main{max-width:760px;margin:-16px auto 40px;padding:0 16px}.panel{background:white;border:1px solid var(--line);border-radius:18px;padding:22px;box-shadow:0 8px 28px #173e2c0b}
+h1,h2{margin:0 0 8px}h1{font-size:23px}h2{font-size:19px}.muted{color:var(--muted);font-size:14px;margin:0 0 18px}
+label{display:block;font-weight:650;font-size:14px;margin:14px 0 6px}input,select{width:100%;padding:13px 14px;border:1px solid #cbd9cf;border-radius:10px;font:inherit;background:white;color:var(--ink)}input:focus,select:focus{outline:3px solid #d5eadc;border-color:var(--green2)}
+button{border:0;border-radius:10px;background:var(--green);color:white;padding:13px 17px;font:inherit;font-weight:700;cursor:pointer}button:hover{background:var(--green2)}button:disabled{opacity:.5;cursor:not-allowed}.full{width:100%;margin-top:14px}.secondary{background:#e9f2ec;color:var(--green)}.hidden{display:none!important}
+.notice{padding:12px 14px;background:#fff7e6;border:1px solid #f0dfb7;border-radius:10px;color:#71551c;font-size:13px;margin-top:14px}
+.status{font-size:14px;margin-top:12px;min-height:22px;color:var(--muted)}.toolbar{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:18px}.userline{font-size:13px;color:var(--muted);overflow-wrap:anywhere}
+.contact{border:1px solid var(--line);border-radius:12px;padding:15px;margin-top:12px;display:flex;align-items:center;justify-content:space-between;gap:12px}.contact strong{display:block}.contact small{color:var(--muted)}.call{white-space:nowrap;text-decoration:none;background:#e8f3eb;color:var(--green);font-weight:750;padding:9px 13px;border-radius:9px}
+.empty{text-align:center;padding:26px 12px;color:var(--muted);background:#f7faf8;border-radius:12px;margin-top:14px}
+footer{text-align:center;color:var(--muted);font-size:12px;padding:0 16px 28px}
+@media(max-width:480px){.panel{padding:18px}.contact{align-items:flex-start}.call{padding:8px 10px}}
+</style>
+</head>
+<body>
+<header><div class="brand">RESIDENT SERVICES DIRECTORY</div><div class="logo">FERNHILL GARDEN</div><p class="subtitle">Helpful contacts for our apartment community</p></header>
+<main>
+<section class="panel" id="loginPanel">
+<h1>Resident Login</h1><p class="muted">Sign in with your registered mobile number to view apartment service contacts.</p>
+<label for="phone">Mobile number</label><input id="phone" type="tel" inputmode="tel" autocomplete="tel" placeholder="+91 98765 43210" maxlength="16">
+<div id="recaptcha-container"></div>
+<button class="full" id="sendOtp">Send OTP</button>
+<div id="otpArea" class="hidden"><label for="otp">Enter OTP</label><input id="otp" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="6-digit OTP"><button class="full" id="verifyOtp">Verify &amp; Login</button></div>
+<div class="status" id="loginStatus" role="status"></div>
+<div class="notice">Access is restricted to mobile numbers registered by the apartment administrator. OTP login becomes active after Firebase is configured (see SETUP.md).</div>
+</section>
+<section class="panel hidden" id="directoryPanel">
+<div class="toolbar"><div><h1>Service Contacts</h1><div class="userline" id="signedInAs"></div></div><button class="secondary" id="logout">Log out</button></div>
+<label for="category">Select service category</label>
+<select id="category"><option value="">Choose a category</option>
+<option>Electrician</option><option>Plumber</option><option>Gardener</option><option>Security</option><option>Dhobi / Laundry</option><option>Library</option><option>Carpenter</option><option>Housekeeping</option><option>AC Technician</option><option>Lift Maintenance</option><option>Garbage Collection</option><option>Car Washing</option></select>
+<div id="results" aria-live="polite"><div class="empty">Choose a category to view its contact details.</div></div>
+</section>
+</main>
+<footer>Fernhill Garden Resident Services · Contact details are for residents only</footer>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+<script>
+/* Add your Firebase web-app configuration here. See SETUP.md. */
+const firebaseConfig = {
+  apiKey: "PASTE_FIREBASE_API_KEY",
+  authDomain: "PASTE_PROJECT_ID.firebaseapp.com",
+  projectId: "PASTE_PROJECT_ID",
+  appId: "PASTE_FIREBASE_APP_ID"
+};
+const configured = firebaseConfig.apiKey !== "PASTE_FIREBASE_API_KEY" && firebaseConfig.projectId !== "PASTE_PROJECT_ID" && firebaseConfig.appId !== "PASTE_FIREBASE_APP_ID";
+const $ = id => document.getElementById(id);
+let confirmation=null, recaptcha=null, auth=null, db=null;
+function setStatus(message){$("loginStatus").textContent=message}
+function showLogin(){ $("loginPanel").classList.remove("hidden"); $("directoryPanel").classList.add("hidden");}
+function showDirectory(user){ $("loginPanel").classList.add("hidden"); $("directoryPanel").classList.remove("hidden"); $("signedInAs").textContent="Signed in: "+(user.phoneNumber||"verified resident");}
+if(!configured){$("sendOtp").disabled=true;setStatus("OTP login is not configured yet. The administrator must complete the Firebase setup.");}
+else {
+ firebase.initializeApp(firebaseConfig); auth=firebase.auth(); db=firebase.firestore();
+ auth.onAuthStateChanged(async user=>{
+  if(!user){showLogin();return;}
+  try{
+   const resident=await db.collection("residents").doc(user.uid).get();
+   if(!resident.exists || resident.data().active!==true || resident.data().phoneNumber!==user.phoneNumber){
+    await auth.signOut();showLogin();setStatus("This mobile number is not registered as an active resident. Please contact the administrator.");return;
+   }
+   showDirectory(user);
+  }catch(e){await auth.signOut();showLogin();setStatus("Could not verify resident access. Please try again.");}
+ });
+ $("sendOtp").addEventListener("click",async()=>{
+  const phone=$("phone").value.trim();
+  if(!/^\+[1-9]\d{7,14}$/.test(phone)){setStatus("Enter the mobile number with country code, e.g. +919876543210.");return;}
+  try{
+   $("sendOtp").disabled=true;
+   if(!recaptcha)recaptcha=new firebase.auth.RecaptchaVerifier("recaptcha-container",{size:"normal"});
+   await recaptcha.render();
+   confirmation=await auth.signInWithPhoneNumber(phone,recaptcha);
+   $("otpArea").classList.remove("hidden");setStatus("OTP sent. Check your phone."); 
+  }catch(e){setStatus(e.message||"Unable to send OTP.");if(recaptcha){recaptcha.clear();recaptcha=null;}}
+  finally{$("sendOtp").disabled=false;}
+ });
+ $("verifyOtp").addEventListener("click",async()=>{
+  if(!confirmation){setStatus("Please request an OTP first.");return;}
+  try{await confirmation.confirm($("otp").value.trim());setStatus("Verifying resident access…");}
+  catch(e){setStatus("OTP verification failed. Check the code and try again.");}
+ });
+ $("logout").addEventListener("click",()=>auth.signOut());
+ $("category").addEventListener("change",async()=>{
+  const category=$("category").value, results=$("results");
+  if(!category){results.innerHTML='<div class="empty">Choose a category to view its contact details.</div>';return;}
+  results.innerHTML='<div class="empty">Loading contacts…</div>';
+  try{
+   const snap=await db.collection("contacts").where("category","==",category).where("active","==",true).get();
+   if(snap.empty){results.innerHTML='<div class="empty">No contact has been added for this category yet. Please contact the apartment administrator.</div>';return;}
+   results.innerHTML="";
+   snap.forEach(doc=>{
+    const c=doc.data(), card=document.createElement("div");card.className="contact";
+    const info=document.createElement("div"), name=document.createElement("strong"), detail=document.createElement("small");
+    name.textContent=c.name||"Service contact";detail.textContent=[c.phone,c.availability].filter(Boolean).join(" · ");
+    info.append(name,detail);card.append(info);
+    if(c.phone){const call=document.createElement("a");call.className="call";call.href="tel:"+c.phone.replace(/[^+\d]/g,"");call.textContent="Call";card.append(call);}
+    results.append(card);
+   });
+  }catch(e){results.innerHTML='<div class="empty">Unable to load contacts. Please try again later.</div>';}
+ });
+}
+</script>
+</body></html>
